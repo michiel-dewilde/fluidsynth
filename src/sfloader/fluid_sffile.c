@@ -708,7 +708,7 @@ static int process_info(SFData *sf, int size)
 
             if(sf->version.major == 3)
             {
-#if !LIBSNDFILE_SUPPORT && !defined(BAGOSYNTHS_STB_VORBIS)
+#if !LIBSNDFILE_SUPPORT && !defined(RIGALONG_STB_VORBIS)
                 FLUID_LOG(FLUID_WARN,
                           "Sound font version is %d.%d but fluidsynth was compiled without"
                           " support for (v3.x)",
@@ -2736,7 +2736,7 @@ error_exit:
     sf_close(sndfile);
     return -1;
 }
-#elif defined(BAGOSYNTHS_STB_VORBIS)
+#elif defined(RIGALONG_STB_VORBIS)
 
 /* SF3 without libsndfile.
  *
@@ -2748,10 +2748,10 @@ error_exit:
  *
  * Supplied by the host (see cpp/fluid/fluid_glue.c), which wraps stb_vorbis.
  * Returns frames decoded, 0 for an empty sample, or -1 on error, and sets
- * *out to a buffer that bagosynths_ogg_free() releases.
+ * *out to a buffer that rigalong_ogg_free() releases.
  */
-extern int bagosynths_ogg_decode_mono16(const void *ogg, int len, short **out, int *channels);
-extern void bagosynths_ogg_free(short *pcm);
+extern int rigalong_ogg_decode_mono16(const void *ogg, int len, short **out, int *channels);
+extern void rigalong_ogg_free(short *pcm);
 
 static int fluid_sffile_read_vorbis(SFData *sf, unsigned int start_byte, unsigned int end_byte, short **data)
 {
@@ -2790,7 +2790,7 @@ static int fluid_sffile_read_vorbis(SFData *sf, unsigned int start_byte, unsigne
         return -1;
     }
 
-    frames = bagosynths_ogg_decode_mono16(ogg, (int)len, &decoded, &channels);
+    frames = rigalong_ogg_decode_mono16(ogg, (int)len, &decoded, &channels);
     FLUID_FREE(ogg);
 
     if(frames < 0)
@@ -2802,14 +2802,14 @@ static int fluid_sffile_read_vorbis(SFData *sf, unsigned int start_byte, unsigne
     if(frames == 0)
     {
         FLUID_LOG(FLUID_DBG, "Empty decompressed sample");
-        bagosynths_ogg_free(decoded);
+        rigalong_ogg_free(decoded);
         return 0;
     }
 
     if(channels != 1)
     {
         FLUID_LOG(FLUID_DBG, "Unsupported channel count %d in ogg sample", channels);
-        bagosynths_ogg_free(decoded);
+        rigalong_ogg_free(decoded);
         return -1;
     }
 
@@ -2820,12 +2820,12 @@ static int fluid_sffile_read_vorbis(SFData *sf, unsigned int start_byte, unsigne
     if(wav_data == NULL)
     {
         FLUID_LOG(FLUID_PANIC, "Out of memory");
-        bagosynths_ogg_free(decoded);
+        rigalong_ogg_free(decoded);
         return -1;
     }
 
     FLUID_MEMCPY(wav_data, decoded, (size_t)frames * sizeof(short));
-    bagosynths_ogg_free(decoded);
+    rigalong_ogg_free(decoded);
 
     *data = wav_data;
     return frames;
